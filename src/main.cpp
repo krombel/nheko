@@ -25,6 +25,7 @@
 #include <QLayout>
 #include <QLibraryInfo>
 #include <QMessageBox>
+#include <QNetworkProxy>
 #include <QPoint>
 #include <QSettings>
 #include <QStandardPaths>
@@ -92,6 +93,58 @@ createCacheDirectory()
         }
 }
 
+void
+setupProxy()
+{
+        QSettings settings;
+
+        // use system defaults. If we have a config we will overwrite it later
+        QNetworkProxyFactory::setUseSystemConfiguration(true);
+
+        /**
+          To set up a proxy:
+            [user]
+            proxy\type=[socks5,http]
+            proxy\host=<>
+            proxy\port=<>
+            proxy\user=<>
+            proxy\password=<>
+          **/
+        if (settings.contains("user/proxy/socks/host")) {
+                // this is the old format. Transform
+                settings.setValue("user/proxy/host", settings.value("user/proxy/socks/host").toString());
+                if (settings.contains("user/proxy/socks/port")) {
+                        settings.setValue("user/proxy/port", settings.value("user/proxy/socks/port").toString());
+                }
+                if (settings.contains("user/proxy/socks/user")) {
+                settings.setValue("user/proxy/user", settings.value("user/proxy/socks/user").toString());
+                }
+                if (settings.contains("user/proxy/socks/password")) {
+                settings.setValue("user/proxy/password", settings.value("user/proxy/socks/password").toString());
+                }
+                settings.setValue("user/proxy/type", "socks5");
+        }
+
+        if (settings.contains("user/proxy/host")) {
+                QNetworkProxy proxy;
+                if (settings.value("user/proxy/type").toString() == "socks5") {
+                        proxy.setType(QNetworkProxy::Socks5Proxy);
+                } else if (settings.value("user/proxy/type").toString() == "http") {
+                        proxy.setType(QNetworkProxy::HttpProxy);
+                } else {
+                        nhlog::net()->error("try to configure a proxy with unknown type");
+                        return;
+                }
+                proxy.setHostName(settings.value("user/proxy/host").toString());
+                proxy.setPort(settings.value("user/proxy/port").toInt());
+                if (settings.contains("user/proxy/user"))
+                        proxy.setUser(settings.value("user/proxy/user").toString());
+                if (settings.contains("user/proxy/socks/password"))
+                        proxy.setPassword(settings.value("user/proxy/password").toString());
+                QNetworkProxy::setApplicationProxy(proxy);
+        }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -138,6 +191,7 @@ main(int argc, char *argv[])
 
         app.setWindowIcon(QIcon(":/logos/nheko.png"));
 
+        setupProxy();
         http::init();
 
         createCacheDirectory();
