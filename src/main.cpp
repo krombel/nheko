@@ -113,14 +113,18 @@ setupProxy()
         if (settings.contains("user/proxy/socks/host")) {
                 // this is the old format. Transform
                 settings.setValue("user/proxy/host", settings.value("user/proxy/socks/host").toString());
+                settings.remove("user/proxy/socks/host");
                 if (settings.contains("user/proxy/socks/port")) {
                         settings.setValue("user/proxy/port", settings.value("user/proxy/socks/port").toString());
+                        settings.remove("user/proxy/socks/port");
                 }
                 if (settings.contains("user/proxy/socks/user")) {
-                settings.setValue("user/proxy/user", settings.value("user/proxy/socks/user").toString());
+                        settings.setValue("user/proxy/user", settings.value("user/proxy/socks/user").toString());
+                        settings.remove("user/proxy/socks/user");
                 }
                 if (settings.contains("user/proxy/socks/password")) {
-                settings.setValue("user/proxy/password", settings.value("user/proxy/socks/password").toString());
+                        settings.setValue("user/proxy/password", settings.value("user/proxy/socks/password").toString());
+                        settings.remove("user/proxy/socks/password");
                 }
                 settings.setValue("user/proxy/type", "socks5");
         }
